@@ -3,6 +3,7 @@ import math
 import random
 import hashlib
 from mathutils import Vector
+from pathlib import Path
 
 pl_rade = 12.7     
 pl_eqt = 210.84          
@@ -93,8 +94,10 @@ selected_palette = rng.choice(final_palette)
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
 
-##BACKGROUND
-image_path = r"../Img/Space.jpg"
+#BACKGROUND
+image = bpy.data.images.load(
+    bpy.path.abspath("//Img/Space.jpg")
+)
 
 scene = bpy.context.scene
 scene.world.use_nodes = True
@@ -108,7 +111,7 @@ output = nodes.new("ShaderNodeOutputWorld")
 bg = nodes.new("ShaderNodeBackground")
 tex = nodes.new("ShaderNodeTexEnvironment")
 
-tex.image = bpy.data.images.load(image_path)
+tex.image = image
 
 links.new(tex.outputs["Color"], bg.inputs["Color"])
 links.new(bg.outputs["Background"], output.inputs["Surface"])
@@ -743,3 +746,39 @@ if P_TYPE=='Terran' or P_TYPE=='Superterran' or P_TYPE=='Superterran':
     createRockyPlanet(P_TYPE,P_TYPE_TEMP)
 elif P_TYPE=='Jovian' or P_TYPE=='Neptunian':
     createGasGiant(planet)
+
+#Compositor
+
+scene = bpy.context.scene
+tree = scene.compositing_node_group
+tree.nodes.clear()
+
+nodes = tree.nodes
+links = tree.links
+
+# Render Layers
+render_layers = nodes.new("CompositorNodeRLayers")
+render_layers.name = "Render Layers"
+render_layers.label = "Render Layers"
+render_layers.location = (-400, 0)
+
+render_layers.scene = scene
+
+# Viewer
+viewer = nodes.new("CompositorNodeViewer")
+viewer.name = "Viewer"
+viewer.label = "Viewer"
+viewer.location = (200, 100)
+
+# Group Output
+group_output = nodes.new("NodeGroupOutput")
+group_output.name = "Group Output"
+group_output.label = "Group Output"
+group_output.location = (200, -100)
+
+if not tree.interface.items_tree.get("Image"):
+    tree.interface.new_socket(name="Image",in_out='OUTPUT',socket_type='NodeSocketColor')
+
+# Links
+links.new(render_layers.outputs["Image"],viewer.inputs["Image"])
+links.new(render_layers.outputs["Image"],group_output.inputs["Image"])
