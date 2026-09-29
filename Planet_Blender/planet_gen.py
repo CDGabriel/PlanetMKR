@@ -4,14 +4,14 @@ import random
 import hashlib
 from mathutils import Vector
 
-pl_rade = 1.07       
-pl_eqt = 10.84            
+pl_rade = 12.7     
+pl_eqt = 210.84          
 st_lum= 0.1939
-pl_orbsmax = 2.2*10
+pl_orbsmax = 2.2*20
 st_teff=5945.0
-P_TYPE = 'Terran'
+P_TYPE = 'Jovian'
 P_TYPE_TEMP = 'Hot'
-P_NAME = '32rgsefeqwrfasf'
+P_NAME = 'HD 2039 b'
 
 #Generate seed based on planet name
 def get_seed(P_NAME):
@@ -33,10 +33,10 @@ PALETTES = {
     ],
 
     "Superterran": [
-        (0.28, 0.10, 0.08, 1.0),  # red-brown
-        (0.7412, 0.6000, 0.5412, 1.0),  # orange-brown
-        (0.65, 0.45, 0.18, 1.0),  # ochre
-        (0.25, 0.20, 0.18, 1.0),  # dark rock
+        (0.28, 0.10, 0.08, 1.0),  
+        (0.7412, 0.6000, 0.5412, 1.0), 
+        (0.65, 0.45, 0.18, 1.0), 
+        (0.25, 0.20, 0.18, 1.0),  
     ],
 
     "Subterran": [
@@ -128,6 +128,23 @@ planet = bpy.context.object
 planet.name = "Planet"
 obj = bpy.context.active_object
 bpy.ops.object.shade_smooth()
+
+#Camera
+camera_distance = pl_rade * 20.0
+bpy.ops.object.camera_add()
+camera = bpy.context.object
+camera.name = "Camera"
+camera.location = (
+    planet.location.x + camera_distance,
+    planet.location.y + camera_distance,
+    planet.location.z + camera_distance
+)
+direction = planet.location - camera.location
+camera.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+
+camera.data.lens = 300
+
+bpy.context.scene.camera = camera
 
 #LIGHT FROM SUN
 
@@ -236,14 +253,16 @@ def generateAtmosphere(planet):
 
 # Rocky Planet Generation
 
-def createRockyPlanet(planet,P_TYPE_TEMP):
+def createRockyPlanet(planet):
     old_empty = bpy.data.objects.get("Planet_Texture_Empty")
     if old_empty: 
         bpy.data.objects.remove(old_empty, do_unlink=True)
     old_atmosphere = bpy.data.objects.get("Atmosphere")
     if old_atmosphere:
         bpy.data.objects.remove(old_atmosphere, do_unlink=True)
-    
+    for obj in list(bpy.data.objects):
+        if obj.name.startswith("Icosphere"):
+            bpy.data.objects.remove(obj, do_unlink=True)
     mat=bpy.data.materials.new(name='Planet Materials')
     mat.use_nodes = True
     
@@ -599,6 +618,128 @@ def createRockyPlanet(planet,P_TYPE_TEMP):
     planet = bpy.data.objects['Planet']
     planet.data.materials.append(mat)
     generateAtmosphere(planet)
-    
 
-createRockyPlanet(planet,P_TYPE_TEMP)
+# Gas Planet Generation
+
+def createGasGiant(planet):
+    old_empty = bpy.data.objects.get("Planet_Texture_Empty")
+    if old_empty: 
+        bpy.data.objects.remove(old_empty, do_unlink=True)
+    old_atmosphere = bpy.data.objects.get("Atmosphere")
+    if old_atmosphere:
+        bpy.data.objects.remove(old_atmosphere, do_unlink=True)
+    for obj in list(bpy.data.objects):
+        if obj.name.startswith("Icosphere"):
+            bpy.data.objects.remove(obj, do_unlink=True)
+    mat=bpy.data.materials.new(name='Planet Materials')
+    mat.use_nodes = True
+    
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    
+    nodes.clear()
+    
+    #Nodes
+    noise_gas_giant = nodes.new("ShaderNodeTexNoise")
+    noise_gas_giant2 = nodes.new("ShaderNodeTexNoise")
+    noise_gas_giant3 = nodes.new("ShaderNodeTexNoise")
+    noise_gas_giant4 = nodes.new("ShaderNodeTexNoise")
+    texcoord_gas_giant = nodes.new("ShaderNodeTexCoord")
+    mapping_gas_giant = nodes.new("ShaderNodeMapping")
+    multiply_gas_giant = nodes.new("ShaderNodeVectorMath")
+    mix_gas_giant = nodes.new("ShaderNodeMixRGB")
+    mix_gas_giant_color_dodge = nodes.new("ShaderNodeMixRGB")
+    mix_gas_giant_color_dodge.blend_type = 'DODGE'
+    mix_gas_giant_multiply = nodes.new("ShaderNodeMixRGB")
+    mix_gas_giant_multiply.blend_type = 'MULTIPLY'
+    multiply_gas_giant.operation = 'MULTIPLY'
+    multiply_gas_giant.inputs[1].default_value = (0.01, 0.01, 1.0)
+    color_ramp_gas_giant = nodes.new("ShaderNodeValToRGB")
+    color_ramp_gas_giant2 = nodes.new("ShaderNodeValToRGB")
+    color_ramp_gas_giant3 = nodes.new("ShaderNodeValToRGB")
+    color_ramp_gas_giant4 = nodes.new("ShaderNodeValToRGB")
+    bsdf_gas_giant = nodes.new("ShaderNodeBsdfPrincipled")
+    output_planet_texture = nodes.new("ShaderNodeOutputMaterial")
+    #Node Links
+    links.new(texcoord_gas_giant.outputs['Object'],multiply_gas_giant.inputs['Vector'])
+    links.new(multiply_gas_giant.outputs['Vector'],mapping_gas_giant.inputs['Vector'])
+    links.new(mapping_gas_giant.outputs['Vector'],mix_gas_giant.inputs['Color1'])
+    links.new(mix_gas_giant.outputs['Color'],noise_gas_giant.inputs['Vector'])
+    links.new(noise_gas_giant.outputs['Fac'],color_ramp_gas_giant.inputs['Fac'])
+    links.new(noise_gas_giant2.outputs['Fac'],mix_gas_giant.inputs['Color2'])
+    links.new(noise_gas_giant3.outputs['Fac'],color_ramp_gas_giant2.inputs['Fac'])
+    links.new(noise_gas_giant4.outputs['Fac'],color_ramp_gas_giant3.inputs['Fac'])
+    links.new(color_ramp_gas_giant2.outputs['Color'],mix_gas_giant_multiply.inputs['Color1'])
+    links.new(color_ramp_gas_giant3.outputs['Color'],mix_gas_giant_multiply.inputs['Color2'])
+    links.new(mix_gas_giant_multiply.outputs['Color'],mix_gas_giant_color_dodge.inputs['Color2'])
+    links.new(color_ramp_gas_giant .outputs['Color'],mix_gas_giant_color_dodge.inputs['Color1'])
+    links.new(mix_gas_giant_color_dodge.outputs['Color'],color_ramp_gas_giant4.inputs['Fac'])
+    links.new(color_ramp_gas_giant4.outputs['Color'],bsdf_gas_giant.inputs['Base Color'])
+    links.new(bsdf_gas_giant.outputs['BSDF'],output_planet_texture.inputs['Surface'])
+    
+    noise_gas_giant.inputs['Scale'].default_value=random.uniform(2.7,10)
+    noise_gas_giant.inputs['Detail'].default_value=random.uniform(5,8)
+    noise_gas_giant.inputs['Roughness'].default_value=random.uniform(0.2,0.7)
+    mix_gas_giant.inputs['Factor'].default_value=default_value=random.uniform(0.6,0.8)
+    
+    noise_gas_giant2.inputs['Scale'].default_value=random.uniform(7,30)
+    noise_gas_giant2.inputs['Detail'].default_value=random.uniform(5,8)
+    noise_gas_giant2.inputs['Roughness'].default_value=random.uniform(0.2,0.9)
+    
+    noise_gas_giant3.inputs['Scale'].default_value=random.uniform(12,18)
+    noise_gas_giant3.inputs['Detail'].default_value=random.uniform(3,7)
+    noise_gas_giant3.inputs['Roughness'].default_value=random.uniform(0.5,0.7)
+    
+    noise_gas_giant4.inputs['Scale'].default_value=random.uniform(12,18)
+    noise_gas_giant4.inputs['Detail'].default_value=random.uniform(3,7)
+    noise_gas_giant4.inputs['Roughness'].default_value=random.uniform(0.5,0.7)
+    
+    mix_gas_giant_multiply.inputs[0].default_value=1.0
+    mix_gas_giant_color_dodge.inputs[0].default_value=1.0
+    bsdf_gas_giant.inputs['Roughness'].default_value=0.8
+    
+    def darken_color(color, factor):
+        return (
+            color[0] * factor,
+            color[1] * factor,
+            color[2] * factor,
+            color[3]
+        )
+
+    base_color = selected_palette
+    dark_color_1 = darken_color(base_color, 0.90)
+    dark_color_2 = darken_color(base_color, 0.65)
+    
+    
+    ramp_gas_giant=color_ramp_gas_giant.color_ramp
+    left_slider_gas_giant=ramp_gas_giant.elements[0]
+    left_slider_gas_giant.position=random.uniform(0.39,0.52)
+    
+    ramp_gas_giant2=color_ramp_gas_giant2.color_ramp
+    left_slider_gas_giant2=ramp_gas_giant2.elements[0]
+    left_slider_gas_giant2.position=random.uniform(0.42,0.52)
+    
+    ramp_gas_giant3=color_ramp_gas_giant3.color_ramp
+    left_slider_gas_giant3=ramp_gas_giant3.elements[0]
+    right_slider_gas_giant3=ramp_gas_giant3.elements[1]
+    left_slider_gas_giant3.position=random.uniform(0.42,0.52)
+    right_slider_gas_giant3.position=random.uniform(0.53,0.67)
+    
+    ramp_gas_giant4=color_ramp_gas_giant4.color_ramp
+    left_slider_gas_giant4=ramp_gas_giant4.elements[0]
+    left_slider_gas_giant4.color=dark_color_2
+    
+    middle_slider_gas_giant4=ramp_gas_giant4.elements[1]
+    middle_slider_gas_giant4.color=dark_color_1
+    middle_slider_gas_giant4.position=random.uniform(0.25,0.35)
+    
+    right_slider_gas_giant4=ramp_gas_giant4.elements.new(random.uniform(left_slider_gas_giant4.position,0.66))
+    right_slider_gas_giant4.color=selected_palette
+    
+    planet = bpy.data.objects['Planet']
+    planet.data.materials.append(mat)
+
+if P_TYPE=='Terran' or P_TYPE=='Superterran' or P_TYPE=='Superterran':
+    createRockyPlanet(P_TYPE,P_TYPE_TEMP)
+elif P_TYPE=='Jovian' or P_TYPE=='Neptunian':
+    createGasGiant(planet)
