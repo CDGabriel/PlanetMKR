@@ -18,7 +18,6 @@
 <img width="1513" height="864" alt="Screenshot 2026-09-29 195333" src="https://github.com/user-attachments/assets/ab46084f-d0ab-4522-817d-f3aa65e0292a" />
 <h2>Planet Surface Change as Temperature Increases</h2>
 <img width="1271" height="750" alt="Screenshot 2026-09-30 213131" src="https://github.com/user-attachments/assets/09ec140e-394f-4fa0-892a-e6baaf9ff498" />
-<img width="879" height="717" alt="Kepler-1399-b" src="https://github.com/user-attachments/assets/d0e9421b-b1b2-41a6-ade0-97378c55a671" />
 <p>As the temperature of the planet rises, the water starts to boil, and lava takes its place. For planets over a certain temperature threshold the atmosphere gets removed, thanks to atmospheric escape.</p>
 <br>
 <p>All of the planets are randomly generated, with some attributes like the color being locked in with the help of a hash seed generated from the planet name.</p>
