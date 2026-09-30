@@ -55,7 +55,11 @@ model_p_type = RandomForestClassifier(
 
 model_p_type.fit(X_train_p_type, y_train_p_type)
 
-dump(model_p_type,'planet_type.joblib')
+# dump(model_p_type,'planet_type.joblib')
+
+y_pred_p_type = model_p_type.predict(X_test_p_type)
+print("Planet Type Classification Report:")
+print(classification_report(y_test_p_type, y_pred_p_type))
 
 y_temp=df[target_temp]
 
@@ -76,4 +80,8 @@ model_temp = RandomForestClassifier(
 
 model_temp.fit(X_train_temp, y_train_temp)
 
-dump(model_temp,'planet_temp.joblib')
+y_pred_temp = model_temp.predict(X_test_temp)
+
+print("Temperature Classification Report:")
+print(classification_report(y_test_temp, y_pred_temp))
+# dump(model_temp,'planet_temp.joblib')

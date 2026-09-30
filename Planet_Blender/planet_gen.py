@@ -5,14 +5,16 @@ import hashlib
 from mathutils import Vector
 from pathlib import Path
 
-pl_rade = 12.7     
-pl_eqt = 210.84          
-st_lum= 0.1939
-pl_orbsmax = 2.2*20
-st_teff=5945.0
-P_TYPE = 'Jovian'
-P_TYPE_TEMP = 'Hot'
-P_NAME = 'HD 2039 b'
+pl_rade = 6.27
+pl_eqt = 12100
+#Logarithm the sun luminosity
+st_lum= 10 ** 1.69897
+pl_orbsmax = 0.819
+pl_orbsmax *= 1000
+st_teff=60000
+P_TYPE = 'Terran'
+P_TYPE_TEMP = 'Warm'
+P_NAME = 'GJ 433 c'
 
 #Generate seed based on planet name
 def get_seed(P_NAME):
@@ -199,7 +201,11 @@ def generateAtmosphere(planet):
     constraint.target = light
     planet_matrix = planet.matrix_world.copy()
     planet.parent = empty
-    bpy.ops.mesh.primitive_ico_sphere_add( radius=pl_rade * 1.01-0.02*temperature_factor, location=planet.location, subdivisions=6 )
+    if pl_eqt<1000:
+        atmosphere_thickness = 0.04 * (1 - temperature_factor)
+    else:
+        atmosphere_thickness = -1
+    bpy.ops.mesh.primitive_ico_sphere_add( radius=pl_rade+atmosphere_thickness, location=planet.location, subdivisions=6 )
     atmosphere = bpy.context.object
     bpy.ops.object.shade_smooth()
     atmosphere_matrix = atmosphere.matrix_world.copy()
@@ -393,8 +399,8 @@ def createRockyPlanet(planet):
     lava_factor = max(0.0, min(1.0, (pl_eqt - 800.0) / 400.0))
     water_color = (0.1020, 0.1608, 0.7373, 1.0)
     lava_color = (1.0000, 0.0627, 0.0000, 1.0)
-    min_emission = 3
-    max_emission = 20.0
+    min_emission = 0
+    max_emission = 1.2
     
     emission_strength = (
     min_emission
@@ -468,7 +474,7 @@ def createRockyPlanet(planet):
     left_slider2.position=random.uniform(0.45,0.5)
     
     #Land Detail
-    magic_texture_land_detail.turbulence_depth =random.randint(6,14)
+    magic_texture_land_detail.turbulence_depth =random.randint(6,9)
     magic_texture_land_detail.inputs['Scale'].default_value=random.uniform(1.5,4.0)
     noise_land_detail.inputs['Scale'].default_value=random.uniform(4.0,7.0)
     noise_land_detail.inputs['Detail'].default_value=15.0
@@ -742,8 +748,8 @@ def createGasGiant(planet):
     planet = bpy.data.objects['Planet']
     planet.data.materials.append(mat)
 
-if P_TYPE=='Terran' or P_TYPE=='Superterran' or P_TYPE=='Superterran':
-    createRockyPlanet(P_TYPE,P_TYPE_TEMP)
+if P_TYPE=='Terran' or P_TYPE=='Superterran' or P_TYPE=='Subterran':
+    createRockyPlanet(P_TYPE)
 elif P_TYPE=='Jovian' or P_TYPE=='Neptunian':
     createGasGiant(planet)
 

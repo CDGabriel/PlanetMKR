@@ -1,0 +1,1 @@
+Open the planet_gen.blend directly from the Planet_Blender folder. Starting blender first, then opening the file will give a file path error.

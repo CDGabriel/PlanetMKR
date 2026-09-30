@@ -1,20 +1,21 @@
 import joblib
 import pandas as pd
+from sklearn.metrics import classification_report
 
 model_type= joblib.load('ML_Model/planet_type.joblib')
 model_temp= joblib.load('ML_Model/planet_temp.joblib')
 
-pl_rade= 12.7
-pl_bmasse= 1999.1507
-pl_eqt= 210.84
-pl_insol= 0.3229
-pl_orbeccen= 0.71
+pl_rade= 0.532
+pl_bmasse= 0.1075
+pl_eqt= 209.8
+pl_insol= 0.431
+pl_orbeccen= 0.0935
 
-pl_orbsmax= 2.2
-pl_dens = 5.36
+pl_orbsmax= 1.524
+pl_dens = 3.934
 
-st_teff = 5945.0
-st_rade = 1.19
+st_teff = 5772
+st_rade = 1.0
 
 model_params = pd.DataFrame([[
     pl_rade,
@@ -47,3 +48,5 @@ planet = {
     "orbital_distance":pl_orbsmax,
     "eccentricity": pl_orbeccen
 }
+
+print('p_type: ',p_type,' thermal_type: ',thermal_type)
