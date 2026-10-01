@@ -5,14 +5,14 @@ import hashlib
 from mathutils import Vector
 from pathlib import Path
 
-pl_rade = 6.27
-pl_eqt = 12100
+pl_rade = 1
+pl_eqt = 100
 #Logarithm the sun luminosity
 st_lum= 10 ** 1.69897
 pl_orbsmax = 0.819
 pl_orbsmax *= 1000
-st_teff=60000
-P_TYPE = 'Terran'
+st_teff=3000
+P_TYPE = 'Subterran'
 P_TYPE_TEMP = 'Warm'
 P_NAME = 'GJ 433 c'
 
